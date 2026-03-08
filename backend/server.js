@@ -2,6 +2,8 @@
 import express from "express";
 import { createServer } from "node:http";
 import { hostname } from "node:os";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { createBareServer } from "@tomphttp/bare-server-node";
 import { epoxyPath } from "@mercuryworkshop/epoxy-transport";
 import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
@@ -11,8 +13,7 @@ import { scramjetPath } from "@mercuryworkshop/scramjet/path";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import session from "express-session";
 import BetterSqlite3Session from "better-sqlite3-session-store";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import db from "./db.js";
 import { signupHandler } from "./api/signup.js";
 import { signinHandler } from "./api/signin.js";
@@ -26,7 +27,11 @@ import { getChangelogHandler, createChangelogHandler, deleteChangelogHandler } f
 import { getFeedbackHandler, createFeedbackHandler, deleteFeedbackHandler } from "./api/feedback.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, ".env.production") });
+console.log("GROQ KEY loaded:", !!process.env.GROQ_API_KEY);
+
 const IS_DEV = process.env.NODE_ENV !== "production";
+dotenv.config({ path: path.join(__dirname, ".env.production") });
 const VITE_PORT = parseInt(process.env.VITE_PORT || "3000");
 
 const SqliteStore = BetterSqlite3Session(session);
@@ -77,28 +82,43 @@ const aiLimiter = (() => {
   };
 })();
 
-app.post("/api/generate", aiLimiter, express.json({ limit: "2mb" }), async (req, res) => {
-  const { prompt, model, stream, options, system, images } = req.body ?? {};
-  if (!prompt || typeof prompt !== "string" || prompt.length > 10000) return res.status(400).json({ error: "Invalid prompt" });
+app.post("/api/generate", aiLimiter, express.json({ limit: "10mb" }), async (req, res) => {
+  const { prompt, model, system, groqMessages } = req.body ?? {};
+  if (!prompt || typeof prompt !== "string" || prompt.length > 10000)
+    return res.status(400).json({ error: "Invalid prompt" });
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 120000);
+
   try {
-    const response = await fetch("https://ai.backend.petezahgames.com/api/generate", {
+    const messages = groqMessages || [
+      ...(system ? [{ role: "system", content: system }] : []),
+      { role: "user", content: prompt },
+    ];
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+      },
       body: JSON.stringify({
-        prompt: prompt.trim(),
-        model: model || "llama3.2",
-        stream: false,
-        ...(options ? { options } : {}),
-        ...(system ? { system } : {}),
-        ...(images ? { images } : {}),
+        model: model || "llama-3.1-8b-instant",
+        messages,
+        max_tokens: 1024,
       }),
       signal: controller.signal,
     });
+
     clearTimeout(timeout);
     const data = await response.json();
-    return res.json(data);
+
+    if (!response.ok) {
+      console.error("Groq API error:", data);
+      return res.status(502).json({ error: "AI service error" });
+    }
+
+    return res.json({ response: data.choices?.[0]?.message?.content ?? "No response." });
   } catch (error) {
     clearTimeout(timeout);
     if (error.name === "AbortError") return res.status(504).json({ error: "Request timeout" });
