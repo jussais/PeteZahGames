@@ -23,16 +23,16 @@
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Baked-in solid equivalents — no alpha, renders identically on Mac + Chromebook */
-    --border: 217 22% 22%;
-    --input: 217 22% 20%;
+    /* Borders — subtle, won't pop on Chromebook or Mac */
+    --border: 217 15% 13%;
+    --input: 217 15% 12%;
     --ring: 210 100% 65%;
     --radius: 1rem;
 
-    --glass: 217 22% 22%;
-    --glass-border: 217 22% 24%;
-    --glass-hover: 217 22% 26%;
-    --glass-active: 217 22% 28%;
+    --glass: 217 15% 12%;
+    --glass-border: 217 15% 14%;
+    --glass-hover: 217 15% 16%;
+    --glass-active: 217 15% 18%;
 
     --glow-primary: 210 100% 65% / 0.2;
     --space-blue: 217 90% 61%;
@@ -48,7 +48,7 @@
     --sidebar-primary-foreground: 220 30% 5%;
     --sidebar-accent: 220 25% 16%;
     --sidebar-accent-foreground: 210 15% 88%;
-    --sidebar-border: 217 22% 18%;
+    --sidebar-border: 217 15% 11%;
     --sidebar-ring: 210 100% 65%;
 
     --nebula-rose: 330 60% 50%;
@@ -72,19 +72,19 @@
 
 @layer utilities {
   .glass {
-    background: hsl(220 25% 14%);
+    background: hsl(220 20% 11%);
     backdrop-filter: blur(24px) saturate(1.4);
     -webkit-backdrop-filter: blur(24px) saturate(1.4);
-    border: 1px solid hsl(217 22% 22%);
+    border: 1px solid hsl(217 15% 14%);
   }
   .glass-heavy {
-    background: hsl(220 25% 15%);
+    background: hsl(220 20% 12%);
     backdrop-filter: blur(40px) saturate(1.6);
     -webkit-backdrop-filter: blur(40px) saturate(1.6);
-    border: 1px solid hsl(217 22% 24%);
+    border: 1px solid hsl(217 15% 15%);
   }
   .glass-subtle {
-    background: hsl(220 25% 11%);
+    background: hsl(220 20% 9%);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
@@ -195,12 +195,12 @@
   }
   .category-card {
     @apply relative rounded-2xl p-3 cursor-pointer transition-all duration-300;
-    background: hsl(220 25% 13%);
-    border: 1px solid hsl(217 22% 20%);
+    background: hsl(220 20% 10%);
+    border: 1px solid hsl(217 15% 13%);
   }
   .category-card:hover {
-    background: hsl(220 25% 17%);
-    border-color: hsl(217 30% 30%);
+    background: hsl(220 20% 14%);
+    border-color: hsl(217 20% 20%);
     transform: translateY(-1px);
     box-shadow: 0 4px 20px hsl(210 60% 30% / 0.3);
   }
