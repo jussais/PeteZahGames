@@ -1,5 +1,5 @@
-
 let host = location.protocol + '//' + location.host;
 
-let _CONFIG = {
+export const _CONFIG = {
   wispurl: localStorage.getItem('proxServer') || "wss://wisp.mercurywork.shop/",
+};
